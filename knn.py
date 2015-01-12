@@ -1,5 +1,6 @@
 import math
 import sys
+import time
 
 def standardize():
 	fl = open("data.txt", "r")
@@ -49,30 +50,15 @@ def standardize():
 			arr[k] = (i - averages[a])/std_devs[a]
 			k+=1
 		a += 1
-
-	#put it all back together
-	outfile = open("standard.txt", "w")
-	i = 0
-
-	while i < 20000:
-		line = ""
-		line += letters[i]
-		k = 0
-		while k < 16:
-			line += "," + str(values[k][i])
-			k+=1
-		line += " \n "
-		outfile.write(line)
-		i+=1
+	
 	values.insert(0, letters)
-
 	return values
 
 #Find k nearest neighbors
 def knn(i, distance, k, values):
 	rogers = [] #it's a beautiful day in the neighborhood...
 	i_tot = 0	
-	for n in range(19999):
+	for n in range(20000):
 		if n != i:
 			if distance == "manhattan":
 				for l in range(1,16):
@@ -124,27 +110,30 @@ def confusion_matrix(classifications):
 	letter = 0
 
 	confusion_arr = []
-
-	for i in range(26):
-		confusion_arr.append([[],[],[],[]]) #TP, FN, FP, TN
-	
+	outfile = open("confusion_matrix.txt", "w")
 	correct = 0
+	outfile.write("Predicted (Horizontal Axis) and Actual (Vertical Axis) \n")
+	outfile.write("\tA\tB\tC\tD\tE\tF\tG\tH\tI\tJ\tK\tL\tM\tN\tO\tP\tQ\tR\tS\tT\tU\tV\tW\tX\tY\tZ\n")
 	for letter_arr in classifications:
 		total = 0
-		for num in letter_arr:
-			total += num
 		correct += letter_arr[letter]
-		confusion_arr[letter][0] = letter_arr[letter]
-		confusion_arr[letter][2] = total - letter_arr[letter]
+		line = chr(letter+65)
+		k = 0
 
-		# print str(chr(letter+65)) 
-		# print "True Positives: " + str(letter_arr[letter])
-		# print "False Positives: " + str(total - letter_arr[letter])
+		while k < 26:
+			line += "\t" + str(letter_arr[k])
+			k+=1
+		line += "\n"
+		outfile.write(line)
 		letter += 1
+
+
+
 	print correct
-	print str(float(correct)/3000)
+	print str(float(correct)/20000)
 
 def main():
+	time1 = time.time()
 	args = sys.argv
 	if len(args) != 3:
 		print "Error: Wrong number of arguments."
@@ -157,11 +146,14 @@ def main():
 		for k in range(26):
 			i.append(0)
 
-
 	#command line arguments
-	for i in range(3000):
+	print args[1]
+	for i in range(20000):
 		neighbors = knn(i, args[2], int(args[1]), values)
 		classification = classify(neighbors, values)
 		correct_or_nah(i, classification, values, classifications)
 	confusion_matrix(classifications)
+	
+	time2 = time.time()
+	#print time2-time1
 main()
