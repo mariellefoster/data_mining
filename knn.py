@@ -124,17 +124,25 @@ def confusion_matrix(classifications):
 	letter = 0
 
 	confusion_arr = []
-	for i in range(26):
-		confusion_arr.append([[],[],[],[]])
 
+	for i in range(26):
+		confusion_arr.append([[],[],[],[]]) #TP, FN, FP, TN
+	
+	correct = 0
 	for letter_arr in classifications:
 		total = 0
 		for num in letter_arr:
 			total += num
-		print str(chr(letter+65)) 
-		print "True Positives: " + str(letter_arr[letter])
-		print "False Positives: " + str(total - letter_arr[letter])
+		correct += letter_arr[letter]
+		confusion_arr[letter][0] = letter_arr[letter]
+		confusion_arr[letter][2] = total - letter_arr[letter]
+
+		# print str(chr(letter+65)) 
+		# print "True Positives: " + str(letter_arr[letter])
+		# print "False Positives: " + str(total - letter_arr[letter])
 		letter += 1
+	print correct
+	print str(float(correct)/3000)
 
 def main():
 	args = sys.argv
@@ -151,7 +159,7 @@ def main():
 
 
 	#command line arguments
-	for i in range(19999):
+	for i in range(3000):
 		neighbors = knn(i, args[2], int(args[1]), values)
 		classification = classify(neighbors, values)
 		correct_or_nah(i, classification, values, classifications)
