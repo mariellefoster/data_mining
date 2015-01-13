@@ -1,6 +1,7 @@
 import math
 import sys
 import time
+import random
 
 def standardize():
 	fl = open("data.txt", "r")
@@ -20,7 +21,6 @@ def standardize():
 				values[i-1].append(int(val))
 				sum_values[i-1] += int(val)
 			i += 1
-
 
 	#calculate averages for each column
 	k = 0
@@ -59,13 +59,14 @@ def knn(i, distance, k, values):
 	rogers = [] #it's a beautiful day in the neighborhood...
 	i_tot = 0	
 	for n in range(20000):
+		#make sure not to compare same row
 		if n != i:
 			if distance == "manhattan":
-				for l in range(1,16):
+				for l in range(1,17):
 					i_tot += abs(values[l][i] - values[l][n])
 
 			if distance == "euclidean":
-				for l in range(1,16):
+				for l in range(1,17):
 					i_tot += (values[l][i] - values[l][n])*(values[l][i] - values[l][n])
 				i_tot = math.sqrt(i_tot)
 
@@ -79,6 +80,7 @@ def knn(i, distance, k, values):
 					if rogers[m][0] <= i_tot:
 						rogers.insert(m, [i_tot, n])
 						break
+
 			if len(rogers) > k:
 				rogers = rogers[1:]
 		i_tot = 0
@@ -92,16 +94,29 @@ def classify(neighbors, values):
 	highest = 0
 	index = 0
 	curr = 0
+	tie_indexes = []
 	for i in letters:
 		if i > highest:
 			index = curr
 			highest = letters[i]
 		curr += 1
+	#print letters[index]
+	
+	#find and break ties
+	tie_index=0
+	for i in letters:
+		if i == letters[index]:
+			tie_indexes.append(tie_index)
+		tie_index += 1
+
+	if len(tie_indexes) > 1:
+		num = random.randint(0, len(tie_indexes) - 1)
+		index = tie_indexes[num]
+
 	return index
 
 #correct or nah?
 def correct_or_nah(i, classification, values, classifications):
-	#print classification
 	actual = ord(values[0][i])-65
 	classifications[actual][classification] += 1
 
@@ -126,11 +141,10 @@ def confusion_matrix(classifications):
 		line += "\n"
 		outfile.write(line)
 		letter += 1
+	# print correct
 
-
-
-	print correct
-	print str(float(correct)/20000)
+	#accuracy
+	#print str(float(correct)/200)
 
 def main():
 	time1 = time.time()
@@ -147,7 +161,6 @@ def main():
 			i.append(0)
 
 	#command line arguments
-	print args[1]
 	for i in range(20000):
 		neighbors = knn(i, args[2], int(args[1]), values)
 		classification = classify(neighbors, values)
@@ -155,5 +168,5 @@ def main():
 	confusion_matrix(classifications)
 	
 	time2 = time.time()
-	#print time2-time1
+	print time2-time1
 main()
