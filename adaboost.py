@@ -7,7 +7,7 @@ import math
 def read_in_data_titanic():
 	fl = open("titanic.dat")
 
-	passengers = []
+	data_points = []
 	class_labels = []
 	for line in fl:
 		# class/crew, adult/child, male/female, survived/died
@@ -18,39 +18,39 @@ def read_in_data_titanic():
 		y = line[3]
 		if y == 0:
 			y = -1
-		passengers.append(x)
+		data_points.append(x)
 		class_labels.append(y)
-	return passengers, class_labels
+	return data_points, class_labels
 
-def classify(passengers, attr, threshhold, ineq):
+def classify(data_points, attr, threshhold, ineq):
 	predictions = []
-	num_pass, num_attr = shape(passengers)
-	for i in range(num_pass):
+	num_items, num_attr = shape(data_points) #items in this case can be number of data_points
+	for i in range(num_items):
 		predictions.append(1)
 	#predictions = matrix(predictions)
-	for i in range(num_pass):
+	for i in range(num_items):
 		pass
 		if ineq == 0: # less than
-			if passengers[i][:,attr] < threshhold:
+			if data_points[i][:,attr] < threshhold:
 				predictions[i] = -1
 		if ineq == 1:
-			if passengers[i][:,attr] >= threshhold:
+			if data_points[i][:,attr] >= threshhold:
 				predictions[i] = -1
 	# print predictions
 	return predictions
 
 #takes in a weight vector D, 
-def build_decision_stump(D, passengers, class_labels, error, class_estimate):
+def build_decision_stump(D, data_points, class_labels, error, class_estimate):
 	# 	Set the min_error to +infinity
 	#error = inf
-	num_pass, num_attr = shape(passengers)	
+	num_items, num_attr = shape(data_points)	
 
 	best_stump = {}
 	# 	For every feature in the dataset:
 	for attr in range(num_attr):
  		# find the min and max for each column/attribute
- 		attr_min = passengers[:,attr].min()
- 		attr_max = passengers[:,attr].max()
+ 		attr_min = data_points[:,attr].min()
+ 		attr_max = data_points[:,attr].max()
 
  		attr_range = attr_max - attr_min
 
@@ -61,10 +61,10 @@ def build_decision_stump(D, passengers, class_labels, error, class_estimate):
  				predictions = []
 
  				# Build a decision stump and test it with the weighted dataset
- 				predictions = classify(passengers, attr, threshhold, ineq)
- 				errors = [1 for i in range(num_pass)]
+ 				predictions = classify(data_points, attr, threshhold, ineq)
+ 				errors = [1 for i in range(num_items)]
 
- 				for i in range(num_pass):
+ 				for i in range(num_items):
  					if predictions[i] == class_labels[i]:
  						errors[i] = 0
 
@@ -91,15 +91,15 @@ def calc_D(weak_stump, class_labels, class_estimate, D):
 	new_D = multiply(D, exponent)
 	return new_D
 
-def train_decision_stumps(passengers, class_labels, num_iterations):
-	num_pass, num_attr = shape(passengers)
+def train_decision_stumps(data_points, class_labels, num_iterations):
+	num_items, num_attr = shape(data_points)
 	best_stump_arr = []
 
 	D = []
-	for i in range(num_pass):
-		D.append([1/float(num_pass)])
+	for i in range(num_items):
+		D.append([1/float(num_items)])
 
-	total_estimate = [0 for i in range(num_pass)]
+	total_estimate = [0 for i in range(num_items)]
 	total_estimate = matrix(total_estimate)
 	# print D_t
 	# For each iteration:
@@ -110,7 +110,7 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 		# 	Find the best stump using build_decision_stump()
 		# assume the stump is a dictionary, containing the dimension value, 
 		# the threshhold value and then finally add the alpha value
-		weak_stump, error, class_estimate = build_decision_stump(D, passengers, class_labels, error, class_estimate)
+		weak_stump, error, class_estimate = build_decision_stump(D, data_points, class_labels, error, class_estimate)
 		# 	Calculate alpha
 		error = float(error)
 		if error > 0.0:
@@ -126,18 +126,19 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 		# 	Update the aggregate class estimate
 		total_estimate = total_estimate + alpha*matrix(class_estimate)
 		#*******************
-		#total_errors = sum(total_estimate)/float(num_pass)
+		#total_errors = sum(total_estimate)/float(num_items)
 
 		total_errors = 0
 		total_estimate = total_estimate.T
 		
-		
+		# Add up all the times the sign error (and therefore the likely prediction)
+		# Is off, and then divide by the total number of datapoints.
 		for k in range(len(class_labels)):
 			if sign(class_labels[k]) != sign(total_estimate[k]):
 				total_errors += 1
 		total_estimate = total_estimate.T
 
-		error_rate = total_errors/float(num_pass)
+		error_rate = total_errors/float(num_items)
 
 		print "Round ", i + 1
 		print "Error rate:", error_rate 
@@ -150,12 +151,10 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 
 def main():
 	print "Adaboost on Titanic"
-	passengers, class_labels = read_in_data_titanic()
+	data_points, class_labels = read_in_data_titanic()
 
-	passengers = matrix(passengers)
+	data_points = matrix(data_points)
 	
-	train_decision_stumps(passengers, class_labels, 10)
-
-
-
+	train_decision_stumps(data_points, class_labels, 10)
+	
 main()
