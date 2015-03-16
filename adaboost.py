@@ -4,7 +4,7 @@ from numpy import *
 import math
 # import numpy
 
-def read_in_data():
+def read_in_data_titanic():
 	fl = open("titanic.dat")
 
 	passengers = []
@@ -85,6 +85,7 @@ def build_decision_stump(D, passengers, class_labels, error, class_estimate):
 def calc_D(weak_stump, class_labels, class_estimate, D):
 	neg_alpha = -1 * weak_stump["alpha"]
 	D = matrix(D)
+
 	# exponent = [neg_alpha for i in range(len(class_labels))]
 	exponent = exp(multiply(neg_alpha* matrix(class_labels).T, matrix(class_estimate).T))
 	new_D = multiply(D, exponent)
@@ -98,13 +99,14 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 	for i in range(num_pass):
 		D.append([1/float(num_pass)])
 
-	total_error = [0 for i in range(num_pass)]
-	total_error = matrix(total_error)
+	total_estimate = [0 for i in range(num_pass)]
+	total_estimate = matrix(total_estimate)
 	# print D_t
 	# For each iteration:
 	for i in range(num_iterations):
 		error = inf
 		class_estimate = []
+
 		# 	Find the best stump using build_decision_stump()
 		# assume the stump is a dictionary, containing the dimension value, 
 		# the threshhold value and then finally add the alpha value
@@ -122,22 +124,37 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 		# 	Calculate the new weight vector D
 		D = calc_D(weak_stump, class_labels, class_estimate, D)
 		# 	Update the aggregate class estimate
-		total_error = total_error + alpha*matrix(class_estimate)
+		total_estimate = total_estimate + alpha*matrix(class_estimate)
 		#*******************
+		#total_errors = sum(total_estimate)/float(num_pass)
 
-	# 	If the error rate ==0.0 : break out of the for loop
+		total_errors = 0
+		total_estimate = total_estimate.T
+		
+		
+		for k in range(len(class_labels)):
+			if sign(class_labels[k]) != sign(total_estimate[k]):
+				total_errors += 1
+		total_estimate = total_estimate.T
+
+		error_rate = total_errors/float(num_pass)
+
+		print "Round ", i + 1
+		print "Error rate:", error_rate 
+
+		# If we've reached a perfect predicting set of stumps, quit while you're ahead
+		if error_rate == 0.0:
+			break
+	return best_stump_arr
+
 
 def main():
-	passengers, class_labels = read_in_data()
+	print "Adaboost on Titanic"
+	passengers, class_labels = read_in_data_titanic()
 
 	passengers = matrix(passengers)
-	#class_labels = matrix(class_labels)
-	#class_labels = class_labels.T
-	# print "meow"
-	# print passengers
-	# print class_labels
 	
-	train_decision_stumps(passengers, class_labels, 1)
+	train_decision_stumps(passengers, class_labels, 10)
 
 
 
