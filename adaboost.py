@@ -86,24 +86,8 @@ def calc_D(weak_stump, class_labels, class_estimate, D):
 	neg_alpha = -1 * weak_stump["alpha"]
 	D = matrix(D)
 	# exponent = [neg_alpha for i in range(len(class_labels))]
-	print matrix(class_estimate).T
-	print
-	print  matrix(class_labels).T
-	# exponent= neg_alpha* matrix(class_labels).T*matrix(class_estimate)
-	# print exponent
-	# for i in range(len(class_labels)):
-	# 	exponent[i] *= class_labels[i]*class_estimate[i]
-	#temp_D = [a*b for a,b in zip(D, exp(exponent))]
-	#exp_arr = array(exp(exponent))
-	D_arr = array(D)
-	new_D = exp_arr*D_arr
-	# print temp_D
-	#new_D = temp_D/sum(temp_D)
-	# print new_D
-	# for val in temp_D:
-	# 	new_D.append(val/float(sum_temp_D))
-	# print matrix(D)
-	print new_D
+	exponent = exp(multiply(neg_alpha* matrix(class_labels).T, matrix(class_estimate).T))
+	new_D = multiply(D, exponent)
 	return new_D
 
 def train_decision_stumps(passengers, class_labels, num_iterations):
@@ -113,8 +97,9 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 	D = []
 	for i in range(num_pass):
 		D.append([1/float(num_pass)])
-	# D = matrix(D)
 
+	total_error = [0 for i in range(num_pass)]
+	total_error = matrix(total_error)
 	# print D_t
 	# For each iteration:
 	for i in range(num_iterations):
@@ -134,12 +119,13 @@ def train_decision_stumps(passengers, class_labels, num_iterations):
 
 		# 	Add the best stump to the stump array
 		best_stump_arr.append(weak_stump)	
-	# 	Calculate the new weight vector D
+		# 	Calculate the new weight vector D
 		D = calc_D(weak_stump, class_labels, class_estimate, D)
-	# 	Update the aggregate class estimate
+		# 	Update the aggregate class estimate
+		total_error = total_error + alpha*matrix(class_estimate)
+		#*******************
+
 	# 	If the error rate ==0.0 : break out of the for loop
-
-
 
 def main():
 	passengers, class_labels = read_in_data()
